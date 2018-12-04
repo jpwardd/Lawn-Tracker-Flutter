@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'auth.dart';
 
 class LoginPage extends StatefulWidget {
-
+  LoginPage({this.auth, this.onSignedIn});
+  final BaseAuth auth;
+  final VoidCallback onSignedIn;
+  
   @override
   State<StatefulWidget> createState() => new _LoginPageState();
 }
@@ -27,12 +30,18 @@ class _LoginPageState extends State<LoginPage> {
     }
       return false;
   }
-
+ 
   void validateAndSubmit() async {
     if (validateAndSave()) {
       try {
-        FirebaseUser user = await FirebaseAuth.instance.signInWithEmailAndPassword(email: _email, password: _password);
-        print('signed in: ${user.uid}');
+        if (_formType == FormType.login) {
+          String userId = await widget.auth.signInWithEmailAndPassword(_email, _password);
+          print('signed in: $userId');
+        } else {
+          String userId = await widget.auth.createUserWithEmailAndPassword(_email, _password);
+          print('Registered user: $userId');
+        }
+        widget.onSignedIn();
       }
       catch (error) {
         print('error: $error');
@@ -41,6 +50,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void goToRegister() {
+    formKey.currentState.reset();
     setState(() {
       _formType = FormType.register;
     });
@@ -57,6 +67,7 @@ class _LoginPageState extends State<LoginPage> {
       return new Scaffold(
         appBar: new AppBar(
           title: new Text('Lawn Tracker'),
+          backgroundColor: new Color(0xFF2E7D32),
         ),
         body: new Container(
           padding: EdgeInsets.all(16.0),
